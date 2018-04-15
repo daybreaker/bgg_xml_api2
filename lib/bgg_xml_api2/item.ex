@@ -71,13 +71,19 @@ defmodule BggXmlApi2.Item do
 
   @doc """
   Retrieve information on an Item based on `id`.
+  Returns single Item when passing one id,
+    or list of items when passing comma separated string of ids
   """
-  @spec info(String.t()) :: {:ok, %BggXmlApi2.Item{}} | {:error, :no_results}
+  @spec info(String.t()) :: {:ok, [] | %BggXmlApi2.Item{}} | {:error, :no_results}
   def info(id) do
     with {:ok, response} <- BggApi.get("/thing?stats=1&id=#{id}"),
          body <- Map.get(response, :body),
-         {:ok, item} <- retrieve_item_details(body, ~x"//item") do
-      {:ok, process_item(item)}
+         {:ok, items} <- retrieve_item_details(body, ~x"//item"l) do
+      if length(items) == 1 do
+        {:ok, process_item(Enum.at(items, 0))}
+      else
+        {:ok, Enum.map(items, &process_item/1)}
+      end
     else
       {:error, _} ->
         {:error, :no_results}
@@ -97,7 +103,8 @@ defmodule BggXmlApi2.Item do
   defp retrieve_item_details(xml, path_to_item) do
     case xpath(xml, path_to_item) do
       nil -> {:error, :no_results}
-      item -> {:ok, rid(item)}
+      [] -> {:error, :no_results}
+      items -> {:ok, Enum.map(items, fn(item) -> rid(item) end)}
     end
   end
 

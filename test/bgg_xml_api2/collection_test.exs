@@ -47,4 +47,16 @@ defmodule BggXmlApi2.CollectionTest do
                 ]}
     end
   end
+
+  test "retrieve game ids from collection" do
+    use_cassette("shdb_collection") do
+      assert Collection.game_ids("shdb") ==
+               {:ok,
+                ~w(
+                    124742 205637 145633 10547 84876 198773 122159 150376 39856 36218 146021 633 169255 2655 54043 70323
+	                  77423 110327 1406 160477 128882 40251 132531 169786 155624 147020 103885 123260 14996 113924 176189
+                )
+               }
+    end
+  end
 end
